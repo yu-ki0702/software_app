@@ -5,8 +5,11 @@ import os
 import calendar
 from datetime import datetime
 
-# 保存先ファイルの定義 (ローカル保存)
-DATA_FILE = "job_schedule.json"
+# --- VSCode実行対策のためのパス解決 ---
+# VSCodeのワークスペース（開いているフォルダ）の位置に関わらず、
+# 常に実行しているこのPythonファイルと同じフォルダに json ファイルを読み書きします。
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(SCRIPT_DIR, "job_schedule.json")
 
 class JobSchedulerApp:
     def __init__(self, root):
