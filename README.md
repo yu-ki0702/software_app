@@ -54,6 +54,7 @@ graph LR
 ```
 
 ##クラス図
+```mermaid
     classDiagram
     direction TB
 
@@ -99,8 +100,10 @@ graph LR
     
     %% StorageManagerはTaskクラスのデータを扱う
     StorageManager ..> Task : 依存（シリアライズ/デシリアライズ）
+```
 
 ##シーケンス図
+```mermaid
     sequenceDiagram
     autonumber
     actor User as 就活生 (Actor)
@@ -138,8 +141,10 @@ graph LR
     deactivate Ctrl
     UI -->> User: 1週間の予定とリマインドが表示される
     deactivate UI
+```
 
 ##状態遷移図
+```mermaid
     stateDiagram-v2
     [*] --> 新規作成状態 : ユーザーが予定を入力
 
@@ -164,3 +169,4 @@ graph LR
     未完了_締切前 --> [*] : 予定を削除する [トリガー: 削除ボタン押下]
     未完了_締切超過 --> [*] : 予定を削除する [トリガー: 削除ボタン押下]
     完了_提出済 --> [*] : 予定を削除する（または古いデータを一括削除） [トリガー: 削除ボタン押下]
+```
