@@ -58,15 +58,15 @@ graph LR
     classDiagram
     direction TB
 
-    %% クラスの定義
-    class AppController {
+    %% クラスの定義（表示名を日本語にマッピング）
+    class AppController["アプリコントローラー (AppController)"] {
         -currentView: String
         +initApp() Void
         +refreshDisplay() Void
         +switchView(viewName: String) Void
     }
 
-    class TaskManager {
+    class TaskManager["タスク管理者 (TaskManager)"] {
         -tasks: List~Task~
         +addTask(task: Task) Boolean
         +updateTask(taskId: String, updatedTask: Task) Boolean
@@ -75,7 +75,7 @@ graph LR
         +getUrgentTasks(daysBefore: Number) List~Task~
     }
 
-    class Task {
+    class Task["就活タスクデータ (Task)"] {
         -id: String
         -companyName: String
         -deadline: Date
@@ -85,7 +85,7 @@ graph LR
         +isUrgent(daysBefore: Number) Boolean
     }
 
-    class StorageManager {
+    class StorageManager["ローカル保存管理者 (StorageManager)"] {
         -storageKey: String
         +save(tasks: List~Task~) Boolean
         +load() List~Task~
@@ -95,39 +95,38 @@ graph LR
     AppController "1" --> "1" TaskManager : 制御・利用
     AppController "1" --> "1" StorageManager : 起動時/変更時のデータ命令
     
-    %% TaskManagerとTaskはコンポジション関係（Managerが消えればTaskリストも消える、ライフサイクルが共にある）
+    %% TaskManagerとTaskはコンポジション関係
     TaskManager "1" *-- "0..*" Task : 管理する >
     
     %% StorageManagerはTaskクラスのデータを扱う
-    StorageManager ..> Task : 依存（シリアライズ/デシリアライズ）
-```
+    StorageManager ..> Task : 依存（保存/読み込み）
 
 ##シーケンス図
 ```mermaid
     sequenceDiagram
     autonumber
-    actor User as 就活生 (Actor)
+    actor User as 就活生 (ユーザー)
     participant UI as アプリ画面 (UI)
-    participant Ctrl as AppController (Controller)
-    participant Model as TaskManager / Storage (Model)
+    participant Ctrl as アプリ管理役 (Controller)
+    participant Model as タスク管理・保存領域 (Model)
 
     User ->> UI: アプリを起動する
     activate UI
-    UI ->> Ctrl: initApp()
+    UI ->> Ctrl: アプリ初期化処理 initApp()
     activate Ctrl
     
-    Ctrl ->> Model: load() [データ読み込み]
+    Ctrl ->> Model: データの読み込み load()
     activate Model
-    Model -->> Ctrl: タスクリストを返却
+    Model -->> Ctrl: 全タスクリストを返却
     deactivate Model
 
     alt タスクデータが存在する場合
-        Ctrl ->> Model: getWeeklyTasks()
+        Ctrl ->> Model: 1週間以内のタスクを取得 getWeeklyTasks()
         activate Model
         Model -->> Ctrl: 1週間以内のタスク一覧
         deactivate Model
 
-        Ctrl ->> Model: getUrgentTasks(3) [直近3日以内]
+        Ctrl ->> Model: 直近3日以内の緊急タスクを取得 getUrgentTasks(3)
         activate Model
         Model -->> Ctrl: 緊急タスク一覧
         deactivate Model
@@ -141,7 +140,6 @@ graph LR
     deactivate Ctrl
     UI -->> User: 1週間の予定とリマインドが表示される
     deactivate UI
-```
 
 ##状態遷移図
 ```mermaid
