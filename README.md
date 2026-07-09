@@ -7,7 +7,8 @@
 
 
 ##ユースケース図風の図
-    graph LR
+```mermaid
+graph LR
     %% アクターの定義
     subgraph アクター
         User((就活生))
