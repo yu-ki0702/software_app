@@ -1,4 +1,10 @@
-#ユースケース図風の図
+##アプリ概要
+目的：就活に特化した予定管理アプリを作成し、予定の抜け漏れ防止や確認場所の一本化による効率化を目的とする。
+
+##操作方法
+コード実行後、左上記入欄に「会社名」「締切日」「課される内容、必要な提出物」を記入しカレンダーに追加をする。カレンダーに反映された内容は左下から日付順で確認でき、予定削除も左下から選択して行う。
+
+##ユースケース図風の図
     graph LR
     %% アクターの定義
     subgraph アクター
@@ -43,7 +49,7 @@
     style User fill:#f9f,stroke:#333,stroke-width:2px
     style UC_Save fill:#e1f5fe,stroke:#0288d1,stroke-width:1px,stroke-dasharray: 5 5
 
-#クラス図
+##クラス図
     classDiagram
     direction TB
 
@@ -90,7 +96,7 @@
     %% StorageManagerはTaskクラスのデータを扱う
     StorageManager ..> Task : 依存（シリアライズ/デシリアライズ）
 
-#シーケンス図
+##シーケンス図
     sequenceDiagram
     autonumber
     actor User as 就活生 (Actor)
@@ -129,7 +135,7 @@
     UI -->> User: 1週間の予定とリマインドが表示される
     deactivate UI
 
-#状態遷移図
+##状態遷移図
     stateDiagram-v2
     [*] --> 新規作成状態 : ユーザーが予定を入力
 
