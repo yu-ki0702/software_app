@@ -51,6 +51,7 @@ graph LR
     %% スタイル定義（見やすさのため）
     style User fill:#f9f,stroke:#333,stroke-width:2px
     style UC_Save fill:#e1f5fe,stroke:#0288d1,stroke-width:1px,stroke-dasharray: 5 5
+```
 
 ##クラス図
     classDiagram
