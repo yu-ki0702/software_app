@@ -1,0 +1,411 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+import json
+import os
+import calendar
+from datetime import datetime
+
+# 保存先ファイルの定義 (ローカル保存)
+DATA_FILE = "job_schedule.json"
+
+class JobSchedulerApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("就活特化予定管理アプリ - フェーズ1")
+        self.root.geometry("1000x650")
+        self.root.minsize(900, 550)
+        
+        # カラーテーマ定義 (就活生向けに清潔感のあるブルー＆ホワイト)
+        self.bg_color = "#F4F7F9"
+        self.primary_color = "#34495E"  # ダークネイビー
+        self.accent_color = "#2980B9"   # ブルー
+        self.card_color = "#FFFFFF"     # 白
+        self.text_color = "#2C3E50"
+        
+        self.root.configure(bg=self.bg_color)
+        
+        # データの初期化
+        self.schedule_data = self.load_data()
+        
+        # 現在の表示年月 (カレンダー用)
+        now = datetime.now()
+        self.current_year = now.year
+        self.current_month = now.month
+        
+        # UIパーツの配置
+        self.create_widgets()
+        self.draw_calendar()
+        self.update_task_list()
+
+    # --- 1. データ管理機能 (ローカル保存) ---
+    def load_data(self):
+        """ローカルのJSONファイルからデータを読み込む"""
+        if os.path.exists(DATA_FILE):
+            try:
+                with open(DATA_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                messagebox.showerror("エラー", f"データの読み込みに失敗しました:\n{e}")
+                return []
+        return []
+
+    def save_data(self):
+        """ローカルのJSONファイルにデータを保存する"""
+        try:
+            with open(DATA_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.schedule_data, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            messagebox.showerror("エラー", f"データの保存に失敗しました:\n{e}")
+
+    # --- 2. GUI構築 ---
+    def create_widgets(self):
+        """画面全体のレイアウト構築"""
+        # 全体タイトル
+        title_label = tk.Label(
+            self.root, 
+            text="就活特化 予定管理カレンダー", 
+            font=("Helvetica", 18, "bold"), 
+            bg=self.bg_color, 
+            fg=self.primary_color
+        )
+        title_label.pack(pady=10)
+
+        # メインフレーム (左右分割)
+        main_frame = tk.Frame(self.root, bg=self.bg_color)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=5)
+
+        # 【左ペイン】入力エリア & 簡易予定リスト
+        left_pane = tk.Frame(main_frame, bg=self.bg_color, width=320)
+        left_pane.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=(0, 10))
+        left_pane.pack_propagate(False)
+
+        # --- 入力フォームカード ---
+        form_frame = tk.LabelFrame(
+            left_pane, 
+            text=" 締切の新規登録 ", 
+            font=("Helvetica", 11, "bold"), 
+            bg=self.card_color, 
+            fg=self.primary_color, 
+            bd=1, 
+            relief=tk.SOLID
+        )
+        form_frame.pack(fill=tk.X, pady=(0, 10), ipady=10)
+
+        # 企業名
+        tk.Label(form_frame, text="企業名 *", bg=self.card_color, fg=self.text_color, font=("Helvetica", 9, "bold")).pack(anchor=tk.W, padx=15, pady=(8, 2))
+        self.ent_company = tk.Entry(form_frame, font=("Helvetica", 10), bd=1, relief=tk.SOLID)
+        self.ent_company.pack(fill=tk.X, padx=15, ipady=3)
+
+        # 締切日選択 (誤入力を防ぐためのプルダウン式)
+        tk.Label(form_frame, text="締切日 *", bg=self.card_color, fg=self.text_color, font=("Helvetica", 9, "bold")).pack(anchor=tk.W, padx=15, pady=(8, 2))
+        date_select_frame = tk.Frame(form_frame, bg=self.card_color)
+        date_select_frame.pack(fill=tk.X, padx=15)
+
+        # 年プルダウン (2026年〜2028年)
+        self.combo_year = ttk.Combobox(date_select_frame, values=["2026", "2027", "2028"], width=6, state="readonly")
+        self.combo_year.set(str(self.current_year))
+        self.combo_year.pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(date_select_frame, text="年", bg=self.card_color).pack(side=tk.LEFT, padx=(0, 5))
+
+        # 月プルダウン (1〜12)
+        months = [str(i) for i in range(1, 13)]
+        self.combo_month = ttk.Combobox(date_select_frame, values=months, width=4, state="readonly")
+        self.combo_month.set(str(self.current_month))
+        self.combo_month.pack(side=tk.LEFT)
+        tk.Label(date_select_frame, text="月", bg=self.card_color).pack(side=tk.LEFT, padx=(0, 5))
+
+        # 日プルダウン (1〜31)
+        days = [str(i) for i in range(1, 32)]
+        self.combo_day = ttk.Combobox(date_select_frame, values=days, width=4, state="readonly")
+        self.combo_day.set(str(datetime.now().day))
+        self.combo_day.pack(side=tk.LEFT)
+        tk.Label(date_select_frame, text="日", bg=self.card_color).pack(side=tk.LEFT)
+
+        # 課される内容 (ES, テストなど)
+        tk.Label(form_frame, text="課される内容 (ES、面接、テスト等) *", bg=self.card_color, fg=self.text_color, font=("Helvetica", 9, "bold")).pack(anchor=tk.W, padx=15, pady=(8, 2))
+        self.ent_task = tk.Entry(form_frame, font=("Helvetica", 10), bd=1, relief=tk.SOLID)
+        self.ent_task.pack(fill=tk.X, padx=15, ipady=3)
+
+        # 登録ボタン
+        btn_register = tk.Button(
+            form_frame, 
+            text="カレンダーに登録", 
+            bg=self.accent_color, 
+            fg="white", 
+            font=("Helvetica", 10, "bold"), 
+            bd=0, 
+            cursor="hand2", 
+            command=self.register_schedule
+        )
+        btn_register.pack(fill=tk.X, padx=15, pady=(15, 5), ipady=5)
+
+        # --- 簡易予定一覧カード (削除用) ---
+        list_frame = tk.LabelFrame(
+            left_pane, 
+            text=" 登録済みの予定一覧 (選択して削除可能) ", 
+            font=("Helvetica", 10, "bold"), 
+            bg=self.card_color, 
+            fg=self.primary_color, 
+            bd=1, 
+            relief=tk.SOLID
+        )
+        list_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
+
+        # Treeview (予定リスト)
+        self.tree = ttk.Treeview(list_frame, columns=("ID", "Date", "Company", "Task"), show="headings", selectmode="browse")
+        self.tree.heading("ID", text="ID")
+        self.tree.heading("Date", text="締切日")
+        self.tree.heading("Company", text="企業名")
+        self.tree.heading("Task", text="内容")
+        
+        # 列幅設定
+        self.tree.column("ID", width=0, stretch=tk.NO) # IDは非表示
+        self.tree.column("Date", width=80, anchor=tk.CENTER)
+        self.tree.column("Company", width=100, anchor=tk.W)
+        self.tree.column("Task", width=100, anchor=tk.W)
+        
+        self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        # 【追加】1週間以内の予定を目立たせるためのタグ設定 (文字が見やすくなるよう薄い黄色を指定)
+        self.tree.tag_configure("near_deadline", background="#FFF2CC")
+
+        # 削除ボタン
+        btn_delete = tk.Button(
+            list_frame, 
+            text="選択した予定を削除", 
+            bg="#C0392B", 
+            fg="white", 
+            font=("Helvetica", 9, "bold"), 
+            bd=0, 
+            cursor="hand2", 
+            command=self.delete_schedule
+        )
+        btn_delete.pack(fill=tk.X, padx=10, pady=(5, 10), ipady=3)
+
+
+        # 【右ペイン】メインカレンダーエリア
+        self.right_pane = tk.Frame(main_frame, bg=self.card_color, bd=1, relief=tk.SOLID)
+        self.right_pane.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        # カレンダーのヘッダー制御（前月・翌月・年月表示）
+        self.cal_header = tk.Frame(self.right_pane, bg=self.primary_color, height=50)
+        self.cal_header.pack(fill=tk.X)
+
+        btn_prev = tk.Button(self.cal_header, text="◀ 前月", bg=self.primary_color, fg="white", bd=0, font=("Helvetica", 10, "bold"), activebackground=self.primary_color, activeforeground="gray", cursor="hand2", command=self.prev_month)
+        btn_prev.pack(side=tk.LEFT, padx=15, pady=10)
+
+        self.label_cal_title = tk.Label(self.cal_header, text="", font=("Helvetica", 14, "bold"), bg=self.primary_color, fg="white")
+        self.label_cal_title.pack(side=tk.LEFT, expand=True)
+
+        btn_next = tk.Button(self.cal_header, text="翌月 ▶", bg=self.primary_color, fg="white", bd=0, font=("Helvetica", 10, "bold"), activebackground=self.primary_color, activeforeground="gray", cursor="hand2", command=self.next_month)
+        btn_next.pack(side=tk.RIGHT, padx=15, pady=10)
+
+        # カレンダーグリッド保持コンテナ
+        self.cal_grid_frame = tk.Frame(self.right_pane, bg=self.card_color)
+        self.cal_grid_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+
+    # --- 3. カレンダー描画ロジック ---
+    def draw_calendar(self):
+        """カレンダーを指定年月で再描画する"""
+        # 既存のカレンダーマスを全削除
+        for widget in self.cal_grid_frame.winfo_children():
+            widget.destroy()
+
+        # ヘッダータイトル更新
+        self.label_cal_title.config(text=f"{self.current_year}年 {self.current_month}月")
+
+        # 曜日ヘッダー (月〜日)
+        weekdays = ["月", "火", "水", "木", "金", "土", "日"]
+        weekday_colors = ["#333333", "#333333", "#333333", "#333333", "#333333", "#2980B9", "#E74C3C"] # 土曜青、日曜赤
+        
+        for i, day_name in enumerate(weekdays):
+            lbl = tk.Label(
+                self.cal_grid_frame, 
+                text=day_name, 
+                font=("Helvetica", 10, "bold"), 
+                bg=self.card_color, 
+                fg=weekday_colors[i]
+            )
+            lbl.grid(row=0, column=i, sticky="nsew", pady=5)
+
+        # カレンダー日付計算
+        cal = calendar.Calendar(firstweekday=0) # 月曜日から開始
+        month_days = cal.monthdayscalendar(self.current_year, self.current_month)
+
+        # グリッドの引き伸ばし設定
+        for i in range(7):
+            self.cal_grid_frame.columnconfigure(i, weight=1, uniform="equal")
+        for r in range(len(month_days) + 1):
+            self.cal_grid_frame.rowconfigure(r, weight=1, uniform="equal")
+
+        # 日付セルの描画
+        for r_idx, week in enumerate(month_days, start=1):
+            for c_idx, day in enumerate(week):
+                if day == 0:
+                    # 今月以外の日付は空白セル
+                    cell = tk.Frame(self.cal_grid_frame, bg="#F9FBFD", bd=1, relief=tk.FLAT)
+                    cell.grid(row=r_idx, column=c_idx, sticky="nsew", padx=1, pady=1)
+                else:
+                    # セル全体のコンテナ枠
+                    cell = tk.Frame(self.cal_grid_frame, bg=self.card_color, bd=1, relief=tk.SOLID, highlightbackground="#BDC3C7", highlightthickness=1)
+                    cell.grid(row=r_idx, column=c_idx, sticky="nsew", padx=1, pady=1)
+
+                    # 日付数字
+                    day_color = "#333333"
+                    if c_idx == 5: day_color = "#2980B9" # 土曜
+                    if c_idx == 6: day_color = "#E74C3C" # 日曜
+                    
+                    lbl_num = tk.Label(cell, text=str(day), font=("Helvetica", 9, "bold"), bg=self.card_color, fg=day_color)
+                    lbl_num.pack(anchor=tk.NW, padx=3, pady=2)
+
+                    # この日の予定を取得
+                    date_str = f"{self.current_year}-{self.current_month:02d}-{day:02d}"
+                    today_tasks = [t for t in self.schedule_data if t["date"] == date_str]
+
+                    if today_tasks:
+                        # 締切がある日は背景色を少し目立たせる
+                        cell.config(bg="#EBF5FB")
+                        lbl_num.config(bg="#EBF5FB")
+                        
+                        # 予定をラベルとしてマスの中に詰め込む
+                        for task in today_tasks:
+                            # プレビュー表示用テキスト
+                            display_text = f"【{task['company']}】\n{task['task']}"
+                            task_lbl = tk.Label(
+                                cell, 
+                                text=display_text, 
+                                font=("Helvetica", 8), 
+                                bg="#3498DB", 
+                                fg="white", 
+                                bd=0, 
+                                justify=tk.LEFT,
+                                wraplength=90, # はみ出し防止用折り返し
+                                anchor=tk.W
+                            )
+                            task_lbl.pack(fill=tk.X, padx=2, pady=1)
+
+    # --- 4. カレンダー操作イベント ---
+    def prev_month(self):
+        """前月を表示"""
+        if self.current_month == 1:
+            self.current_month = 12
+            self.current_year -= 1
+        else:
+            self.current_month -= 1
+        self.draw_calendar()
+
+    def next_month(self):
+        """翌月を表示"""
+        if self.current_month == 12:
+            self.current_month = 1
+            self.current_year += 1
+        else:
+            self.current_month += 1
+        self.draw_calendar()
+
+
+    # --- 5. 予定のCRUDアクション ---
+    def register_schedule(self):
+        """フォームの入力値をバリデーションし、カレンダー及びローカルに保存する"""
+        company = self.ent_company.get().strip()
+        year = self.combo_year.get()
+        month = int(self.combo_month.get())
+        day = int(self.combo_day.get())
+        task = self.ent_task.get().strip()
+
+        # 入力必須バリデーション
+        if not company or not task:
+            messagebox.showwarning("入力エラー", "企業名と課される内容は必ず入力してください。")
+            return
+
+        # 日付の整合性チェック (例: 2月31日などを防ぐ)
+        try:
+            target_date = datetime(int(year), month, day)
+            date_str = target_date.strftime("%Y-%m-%d")
+        except ValueError:
+            messagebox.showwarning("日付エラー", "無効な日付が選択されています。カレンダー上に存在しない日程です。")
+            return
+
+        # 新規予定オブジェクト
+        new_item = {
+            "id": str(datetime.now().timestamp()), # ユニークなタイムスタンプキー
+            "company": company,
+            "date": date_str,
+            "task": task
+        }
+
+        # データ追加 & 保存
+        self.schedule_data.append(new_item)
+        self.save_data()
+
+        # 入力フォームのリセット
+        self.ent_company.delete(0, tk.END)
+        self.ent_task.delete(0, tk.END)
+
+        # カレンダーと一覧リストをリフレッシュ
+        self.draw_calendar()
+        self.update_task_list()
+        
+        messagebox.showinfo("登録完了", f"{company}の締切予定を登録しました！")
+
+    def update_task_list(self):
+        """画面左下の登録済み予定一覧リストを更新する"""
+        # 既存アイテム全クリア
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        # 【追加】判定基準となる「今日の日付」を取得
+        today = datetime.now().date()
+
+        # 日付順にソートして再表示
+        sorted_data = sorted(self.schedule_data, key=lambda x: x["date"])
+        for idx, item in enumerate(sorted_data):
+            
+            # 【追加】締切が1週間（7日）以内かどうかを判定するロジック
+            item_date = datetime.strptime(item["date"], "%Y-%m-%d").date()
+            days_left = (item_date - today).days
+            
+            # 今日を含めて7日以内の締め切りであればタグを割り当て
+            # （0 <= days_left とすることで、すでに過ぎてしまった過去のものは除外しています）
+            row_tags = ()
+            if 0 <= days_left <= 7:
+                row_tags = ("near_deadline",)
+
+            self.tree.insert(
+                "", 
+                tk.END, 
+                values=(item["id"], item["date"], item["company"], item["task"]),
+                tags=row_tags # 【追加】該当の行にだけタグを適用
+            )
+
+    def delete_schedule(self):
+        """一覧で選択された予定を削除する"""
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showwarning("選択エラー", "削除したい予定を一覧から選択してください。")
+            return
+
+        # 選択中のアイテムIDの取得
+        values = self.tree.item(selected_item, "values")
+        target_id = values[0]
+        company_name = values[2]
+
+        # ユーザー確認
+        confirm = messagebox.askyesno("削除の確認", f"{company_name}の予定を削除してもよろしいですか？")
+        if confirm:
+            # データの絞り込み削除
+            self.schedule_data = [t for t in self.schedule_data if t["id"] != target_id]
+            self.save_data()
+            
+            # 再描画
+            self.draw_calendar()
+            self.update_task_list()
+            messagebox.showinfo("削除完了", "予定を削除しました。")
+
+
+# --- メイン実行処理 ---
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = JobSchedulerApp(root)
+    root.mainloop()
