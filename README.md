@@ -100,46 +100,48 @@ graph LR
     
     %% StorageManagerはTaskクラスのデータを扱う
     StorageManager ..> Task : 依存（保存/読み込み）
+```
 
 ##シーケンス図
 ```mermaid
-    sequenceDiagram
-    autonumber
-    actor User as 就活生 (ユーザー)
-    participant UI as アプリ画面 (UI)
-    participant Ctrl as アプリ管理役 (Controller)
-    participant Model as タスク管理・保存領域 (Model)
+    sequenceDiagram
+    autonumber
+    actor User as 就活生 (Actor)
+    participant UI as アプリ画面 (UI)
+    participant Ctrl as AppController (Controller)
+    participant Model as TaskManager / Storage (Model)
 
-    User ->> UI: アプリを起動する
-    activate UI
-    UI ->> Ctrl: アプリ初期化処理 initApp()
-    activate Ctrl
-    
-    Ctrl ->> Model: データの読み込み load()
-    activate Model
-    Model -->> Ctrl: 全タスクリストを返却
-    deactivate Model
+    User ->> UI: アプリを起動する
+    activate UI
+    UI ->> Ctrl: initApp()
+    activate Ctrl
+    
+    Ctrl ->> Model: load() [データ読み込み]
+    activate Model
+    Model -->> Ctrl: タスクリストを返却
+    deactivate Model
 
-    alt タスクデータが存在する場合
-        Ctrl ->> Model: 1週間以内のタスクを取得 getWeeklyTasks()
-        activate Model
-        Model -->> Ctrl: 1週間以内のタスク一覧
-        deactivate Model
+    alt タスクデータが存在する場合
+        Ctrl ->> Model: getWeeklyTasks()
+        activate Model
+        Model -->> Ctrl: 1週間以内のタスク一覧
+        deactivate Model
 
-        Ctrl ->> Model: 直近3日以内の緊急タスクを取得 getUrgentTasks(3)
-        activate Model
-        Model -->> Ctrl: 緊急タスク一覧
-        deactivate Model
+        Ctrl ->> Model: getUrgentTasks(3) [直近3日以内]
+        activate Model
+        Model -->> Ctrl: 緊急タスク一覧
+        deactivate Model
 
-        Ctrl ->> UI: 1週間予定 ＆ リマインドエリアを描画
-    else データが空（初回起動など）の場合
-        Ctrl ->> UI: 「予定がありません。登録してください」を表示
-    end
+        Ctrl ->> UI: 1週間予定 ＆ リマインドエリアを描画
+    else データが空（初回起動など）の場合
+        Ctrl ->> UI: 「予定がありません。登録してください」を表示
+    end
 
-    Ctrl -->> UI: 描画完了
-    deactivate Ctrl
-    UI -->> User: 1週間の予定とリマインドが表示される
-    deactivate UI
+    Ctrl -->> UI: 描画完了
+    deactivate Ctrl
+    UI -->> User: 1週間の予定とリマインドが表示される
+    deactivate UI
+```
 
 ##状態遷移図
 ```mermaid
