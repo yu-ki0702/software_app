@@ -55,51 +55,51 @@ graph LR
 
 ##クラス図
 ```mermaid
-    classDiagram
-    direction TB
+    classDiagram
+    direction TB
 
-    %% クラスの定義（表示名を日本語にマッピング）
-    class AppController["アプリコントローラー (AppController)"] {
-        -currentView: String
-        +initApp() Void
-        +refreshDisplay() Void
-        +switchView(viewName: String) Void
-    }
+    %% クラスの定義
+    class AppController {
+        -currentView: String
+        +initApp() Void
+        +refreshDisplay() Void
+        +switchView(viewName: String) Void
+    }
 
-    class TaskManager["タスク管理者 (TaskManager)"] {
-        -tasks: List~Task~
-        +addTask(task: Task) Boolean
-        +updateTask(taskId: String, updatedTask: Task) Boolean
-        +deleteTask(taskId: String) Boolean
-        +getWeeklyTasks() List~Task~
-        +getUrgentTasks(daysBefore: Number) List~Task~
-    }
+    class TaskManager {
+        -tasks: List~Task~
+        +addTask(task: Task) Boolean
+        +updateTask(taskId: String, updatedTask: Task) Boolean
+        +deleteTask(taskId: String) Boolean
+        +getWeeklyTasks() List~Task~
+        +getUrgentTasks(daysBefore: Number) List~Task~
+    }
 
-    class Task["就活タスクデータ (Task)"] {
-        -id: String
-        -companyName: String
-        -deadline: Date
-        -content: String
-        -isCompleted: Boolean
-        +toggleComplete() Void
-        +isUrgent(daysBefore: Number) Boolean
-    }
+    class Task {
+        -id: String
+        -companyName: String
+        -deadline: Date
+        -content: String
+        -isCompleted: Boolean
+        +toggleComplete() Void
+        +isUrgent(daysBefore: Number) Boolean
+    }
 
-    class StorageManager["ローカル保存管理者 (StorageManager)"] {
-        -storageKey: String
-        +save(tasks: List~Task~) Boolean
-        +load() List~Task~
-    }
+    class StorageManager {
+        -storageKey: String
+        +save(tasks: List~Task~) Boolean
+        +load() List~Task~
+    }
 
-    %% クラス間の関連・多重度
-    AppController "1" --> "1" TaskManager : 制御・利用
-    AppController "1" --> "1" StorageManager : 起動時/変更時のデータ命令
-    
-    %% TaskManagerとTaskはコンポジション関係
-    TaskManager "1" *-- "0..*" Task : 管理する >
-    
-    %% StorageManagerはTaskクラスのデータを扱う
-    StorageManager ..> Task : 依存（保存/読み込み）
+    %% クラス間の関連・多重度
+    AppController "1" --> "1" TaskManager : 制御・利用
+    AppController "1" --> "1" StorageManager : 起動時/変更時のデータ命令
+    
+    %% TaskManagerとTaskはコンポジション関係（Managerが消えればTaskリストも消える、ライフサイクルが共にある）
+    TaskManager "1" *-- "0..*" Task : 管理する >
+    
+    %% StorageManagerはTaskクラスのデータを扱う
+    StorageManager ..> Task : 依存（シリアライズ/デシリアライズ）
 ```
 
 ##シーケンス図
